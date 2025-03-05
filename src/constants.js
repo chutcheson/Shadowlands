@@ -29,13 +29,13 @@ export const DIRECTION_DELTA = {
 
 // Game colors
 export const COLORS = {
-    BACKGROUND: '#111111',
-    WALL: '#ffffff',
-    FLOOR: '#f5f5f5',
-    PLAYER: '#000000',
-    EXIT: '#ffd700',
-    FOG: '#222222',
-    START: '#4CAF50'
+    BACKGROUND: '#FAF9F6', // Soft off-white background
+    WALL: '#2B2B2B',       // Deep charcoal grey for walls
+    FLOOR: '#FAF9F6',      // Soft off-white for floor (same as background for minimalist look)
+    PLAYER: '#000000',     // Pure black for player
+    EXIT: '#FFD700',       // Glowing golden-yellow for exit
+    FOG: '#EEEEEE',        // Very light grey for fog (barely visible)
+    START: '#E6E6FA'       // Light lavender for start
 };
 
 // Game settings

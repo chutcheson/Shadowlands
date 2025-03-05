@@ -32,55 +32,100 @@ export class MazeRenderer {
     drawCell(x, y, isVisible = true, isStart = false, isExit = false) {
         const cellX = x * this.cellSize;
         const cellY = y * this.cellSize;
+        const padding = 1; // Tiny padding for a subtle grid effect
         
-        // Draw cell background with cel-shaded effect
+        // Draw cell background with minimalist vector aesthetic
         if (isVisible) {
-            // Base color
-            let baseColor;
+            // Fill background
+            this.ctx.fillStyle = COLORS.FLOOR;
+            this.ctx.fillRect(
+                cellX + padding, 
+                cellY + padding, 
+                this.cellSize - padding * 2, 
+                this.cellSize - padding * 2
+            );
+            
+            // Add special styling for exit and start cells
             if (isExit) {
-                baseColor = COLORS.EXIT;
+                // Draw exit cell with a glowing effect
+                const gradient = this.ctx.createRadialGradient(
+                    cellX + this.cellSize / 2,
+                    cellY + this.cellSize / 2,
+                    this.cellSize * 0.2,
+                    cellX + this.cellSize / 2,
+                    cellY + this.cellSize / 2,
+                    this.cellSize * 0.8
+                );
+                
+                gradient.addColorStop(0, COLORS.EXIT);
+                gradient.addColorStop(1, this.adjustAlpha(COLORS.EXIT, 0.5));
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(
+                    cellX + padding, 
+                    cellY + padding, 
+                    this.cellSize - padding * 2, 
+                    this.cellSize - padding * 2
+                );
             } else if (isStart) {
-                baseColor = COLORS.START;
-            } else {
-                baseColor = COLORS.FLOOR;
+                // Draw start cell with subtle indicator
+                this.ctx.fillStyle = COLORS.START;
+                this.ctx.fillRect(
+                    cellX + padding, 
+                    cellY + padding, 
+                    this.cellSize - padding * 2, 
+                    this.cellSize - padding * 2
+                );
             }
             
-            // Draw full cell without walls/borders
-            this.ctx.fillStyle = baseColor;
-            this.ctx.fillRect(
-                cellX, 
-                cellY, 
-                this.cellSize, 
-                this.cellSize
-            );
+            // Draw walls if needed based on neighboring cells
+            const walls = this.mazeGenerator.getWalls(x, y);
+            this.ctx.fillStyle = COLORS.WALL;
             
-            // Add darker edge to create cel-shaded look (but not on the outer edges)
-            this.ctx.fillStyle = this.getDarkerColor(baseColor);
-            this.ctx.fillRect(
-                cellX + this.cellSize * 0.8, 
-                cellY, 
-                this.cellSize * 0.2, 
-                this.cellSize
-            );
-            this.ctx.fillRect(
-                cellX, 
-                cellY + this.cellSize * 0.8, 
-                this.cellSize, 
-                this.cellSize * 0.2
-            );
+            // Only draw walls where there's a passage to a visible cell
+            // This creates the effect of only seeing walls at the edges of visibility
             
-            // Add highlight for more dramatic cel-shading
-            if (isExit) {
-                // Add glow effect for exit
-                this.ctx.fillStyle = this.getLighterColor(baseColor);
+            // North wall
+            if (walls & CELL.N) {
                 this.ctx.fillRect(
                     cellX, 
                     cellY, 
-                    this.cellSize * 0.3, 
-                    this.cellSize * 0.3
+                    this.cellSize, 
+                    this.wallThickness
+                );
+            }
+            
+            // East wall
+            if (walls & CELL.E) {
+                this.ctx.fillRect(
+                    cellX + this.cellSize - this.wallThickness, 
+                    cellY, 
+                    this.wallThickness, 
+                    this.cellSize
+                );
+            }
+            
+            // South wall
+            if (walls & CELL.S) {
+                this.ctx.fillRect(
+                    cellX, 
+                    cellY + this.cellSize - this.wallThickness, 
+                    this.cellSize, 
+                    this.wallThickness
+                );
+            }
+            
+            // West wall
+            if (walls & CELL.W) {
+                this.ctx.fillRect(
+                    cellX, 
+                    cellY, 
+                    this.wallThickness, 
+                    this.cellSize
                 );
             }
         } else {
+            // Draw fog for non-visible cells
             this.ctx.fillStyle = COLORS.FOG;
             this.ctx.fillRect(
                 cellX, 
@@ -89,6 +134,14 @@ export class MazeRenderer {
                 this.cellSize
             );
         }
+    }
+    
+    // Helper to adjust color opacity
+    adjustAlpha(hexColor, alpha) {
+        const r = parseInt(hexColor.slice(1, 3), 16);
+        const g = parseInt(hexColor.slice(3, 5), 16);
+        const b = parseInt(hexColor.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
     
     // Helper function to get a darker version of a color for cell shading
@@ -127,40 +180,30 @@ export class MazeRenderer {
         const centerX = (x + 0.5) * this.cellSize;
         const centerY = (y + 0.5) * this.cellSize;
         
-        // Draw player with cel-shaded effect
-        const baseSize = this.playerSize / 2;
+        // Draw player as a simple dot for minimalist aesthetic
+        const playerSize = this.playerSize * 0.6; // Making it slightly smaller for minimalist look
         
-        // Main body
+        // Main black circle
         this.ctx.fillStyle = COLORS.PLAYER;
         this.ctx.beginPath();
         this.ctx.arc(
             centerX, 
             centerY, 
-            baseSize, 
+            playerSize / 2, 
             0, 
             Math.PI * 2
         );
         this.ctx.fill();
         
-        // Highlight (cel-shading)
-        this.ctx.fillStyle = '#333333';
+        // Add subtle shadow for depth
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
         this.ctx.beginPath();
-        this.ctx.arc(
-            centerX + baseSize * 0.3, 
-            centerY + baseSize * 0.3, 
-            baseSize * 0.6, 
+        this.ctx.ellipse(
+            centerX + 1, 
+            centerY + 1, 
+            playerSize / 2, 
+            playerSize / 4, 
             0, 
-            Math.PI * 2
-        );
-        this.ctx.fill();
-        
-        // Light reflection
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.beginPath();
-        this.ctx.arc(
-            centerX - baseSize * 0.3, 
-            centerY - baseSize * 0.3, 
-            baseSize * 0.3, 
             0, 
             Math.PI * 2
         );
