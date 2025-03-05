@@ -1,16 +1,29 @@
 import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { CELL } from '../constants.js';
 
-// Load API key from file (unsafe for production, just for demo)
-let apiKey = null;
+// Load API keys from files (unsafe for production, just for demo)
+let openaiApiKey = null;
+let anthropicApiKey = null;
 
-async function loadApiKey() {
+async function loadOpenAIKey() {
     try {
         const response = await fetch('/openai_api_key.txt');
-        apiKey = await response.text();
-        return apiKey.trim();
+        openaiApiKey = await response.text();
+        return openaiApiKey.trim();
     } catch (error) {
         console.error('Failed to load OpenAI API key:', error);
+        return null;
+    }
+}
+
+async function loadAnthropicKey() {
+    try {
+        const response = await fetch('/anthropic_api_key.txt');
+        anthropicApiKey = await response.text();
+        return anthropicApiKey.trim();
+    } catch (error) {
+        console.error('Failed to load Anthropic API key:', error);
         return null;
     }
 }
@@ -26,24 +39,52 @@ export class AIPlayer {
     }
 
     async initialize() {
-        if (!apiKey) {
-            apiKey = await loadApiKey();
-        }
-        
-        if (!apiKey) {
-            console.error('No API key available');
-            return false;
-        }
+        // Determine which API client to initialize based on the model
+        if (this.model.startsWith('gpt')) {
+            // Initialize OpenAI client
+            if (!openaiApiKey) {
+                openaiApiKey = await loadOpenAIKey();
+            }
+            
+            if (!openaiApiKey) {
+                console.error('No OpenAI API key available');
+                return false;
+            }
 
-        try {
-            this.client = new OpenAI({
-                apiKey: apiKey,
-                dangerouslyAllowBrowser: true // Only for demo purposes
-            });
-            this.isReady = true;
-            return true;
-        } catch (error) {
-            console.error('Failed to initialize OpenAI client:', error);
+            try {
+                this.client = new OpenAI({
+                    apiKey: openaiApiKey,
+                    dangerouslyAllowBrowser: true // Only for demo purposes
+                });
+                this.isReady = true;
+                return true;
+            } catch (error) {
+                console.error('Failed to initialize OpenAI client:', error);
+                return false;
+            }
+        } else if (this.model.startsWith('claude')) {
+            // Initialize Anthropic client
+            if (!anthropicApiKey) {
+                anthropicApiKey = await loadAnthropicKey();
+            }
+            
+            if (!anthropicApiKey) {
+                console.error('No Anthropic API key available');
+                return false;
+            }
+
+            try {
+                this.client = new Anthropic({
+                    apiKey: anthropicApiKey,
+                });
+                this.isReady = true;
+                return true;
+            } catch (error) {
+                console.error('Failed to initialize Anthropic client:', error);
+                return false;
+            }
+        } else {
+            console.error('Unknown model type:', this.model);
             return false;
         }
     }
@@ -132,8 +173,20 @@ export class AIPlayer {
             lastEntry.position.y !== currentState.position.y) {
             this.history.push(currentState);
         }
-
-        // Prepare the system message
+        
+        // Use different API methods based on the selected model
+        if (this.model.startsWith('gpt')) {
+            return this.getOpenAINextMove(mazeGenerator, currentState);
+        } else if (this.model.startsWith('claude')) {
+            return this.getAnthropicNextMove(mazeGenerator, currentState);
+        } else {
+            console.error('Unknown model for getNextMove:', this.model);
+            return null;
+        }
+    }
+    
+    async getOpenAINextMove(mazeGenerator, currentState) {
+        // Prepare the system message for OpenAI models
         const systemMessage = {
             role: 'system',
             content: `You are an AI solving a maze. Your goal is to find the exit (marked as isExit: true) from the current position.
@@ -266,6 +319,130 @@ Decide your next move. Return only: "north", "east", "south", or "west"`
         }
     }
 
+    async getAnthropicNextMove(mazeGenerator, currentState) {
+        // Create prompt for Anthropic Claude with system message and history
+        let systemPrompt = `You are an AI solving a maze. Your goal is to find the exit (marked as isExit: true) from the current position.
+
+You can only see your current cell and adjacent cells that are not blocked by walls. 
+You must make decisions based on what you can currently see and your complete memory of where you've been.
+
+The maze is a grid where each cell can have walls on any of its four sides: north, east, south, and west.
+You can only move in directions where there is no wall.
+
+NAVIGATION STRATEGY:
+1. If you can see the exit, move toward it directly.
+2. Maintain a mental map of the maze from the cells you've visited.
+3. Avoid revisiting the same cells when possible.
+4. Use wall-following or other maze-solving algorithms when appropriate.
+5. If you find yourself in a loop, try a different direction.
+
+For each move, you MUST return only one of: "north", "east", "south", or "west".
+
+The maze is ${mazeGenerator.width}x${mazeGenerator.height} in size.
+The exit is somewhere in the maze, marked as isExit: true when visible.
+You have full access to your entire movement history since starting the maze.`;
+
+        // Format history for Claude
+        let historyText = this.history.map((entry, index) => {
+            return `Move ${index + 1}:
+Current position: (${entry.position.x}, ${entry.position.y})
+Visible cells: ${JSON.stringify(entry.visibleCells, null, 2)}`;
+        }).join('\n\n');
+
+        // Current state message
+        let currentPrompt = `Current position: (${this.gameState.playerPosition.x}, ${this.gameState.playerPosition.y})
+Visible cells: ${JSON.stringify(currentState.visibleCells, null, 2)}
+
+Decide your next move. Return only: "north", "east", "south", or "west"`;
+
+        try {
+            // Log example of request to show what's sent to the LLM
+            const exampleRequest = {
+                model: this.model,
+                systemPrompt: systemPrompt,
+                messages: [
+                    { role: "user", content: historyText + "\n\n" + currentPrompt }
+                ]
+            };
+            
+            // Log an example to the console for debugging
+            console.log("Example Claude Request:", JSON.stringify(exampleRequest, null, 2));
+            
+            // Show example in the UI if possible
+            const exampleEl = document.getElementById('ai-game-state');
+            if (exampleEl) {
+                // Display a more readable version of visible cells for the current state
+                const visibleCellsDescription = currentState.visibleCells.map(cell => {
+                    return `Cell at (${cell.position.x}, ${cell.position.y}):
+    Walls: ${Object.entries(cell.walls).filter(([k,v]) => v).map(([k]) => k).join(', ')}
+    ${cell.isStart ? '(START)' : ''}${cell.isExit ? '(EXIT)' : ''}`;
+                }).join('\n');
+                
+                exampleEl.innerHTML = `
+                <p><strong>Using Claude 3.7 Sonnet</strong></p>
+                <p><strong>Current position:</strong> (${this.gameState.playerPosition.x}, ${this.gameState.playerPosition.y})</p>
+                <p><strong>Visible cells:</strong></p>
+                <pre style="font-size: 0.8rem; background: #f6f6f6; padding: 5px; border-radius: 4px; max-height: 100px; overflow-y: auto;">${visibleCellsDescription}</pre>
+                <p><strong>History:</strong> ${this.history.length} previous positions</p>
+                `;
+            }
+            
+            // Make the API call to Anthropic Claude
+            const response = await this.client.messages.create({
+                model: "claude-3-sonnet-20240229", // Use the closest stable Claude model
+                system: systemPrompt,
+                messages: [
+                    { role: "user", content: historyText + "\n\n" + currentPrompt }
+                ],
+                max_tokens: 50,
+                temperature: 0.2
+            });
+            
+            // Extract and process the response
+            const moveResponse = response.content[0].text.trim().toLowerCase();
+            
+            // Display the AI's response in the decision section
+            const decisionEl = document.getElementById('ai-decision');
+            if (decisionEl) {
+                decisionEl.innerHTML = `
+                <p><strong>Claude response:</strong></p>
+                <pre style="font-size: 0.9rem; background: #f6f6f6; padding: 5px; border-radius: 4px;">${moveResponse}</pre>
+                <p><strong>Direction chosen:</strong> ${moveResponse.includes('north') ? 'north' : 
+                                            moveResponse.includes('east') ? 'east' : 
+                                            moveResponse.includes('south') ? 'south' : 
+                                            moveResponse.includes('west') ? 'west' : 'unknown'}</p>
+                `;
+            }
+            
+            // Parse the response to get a valid direction
+            if (moveResponse.includes('north')) {
+                return 'north';
+            } else if (moveResponse.includes('east')) {
+                return 'east';
+            } else if (moveResponse.includes('south')) {
+                return 'south';
+            } else if (moveResponse.includes('west')) {
+                return 'west';
+            } else {
+                // If no valid direction found, extract just the first word
+                const firstWord = moveResponse.split(/\s+/)[0];
+                if (['north', 'east', 'south', 'west'].includes(firstWord)) {
+                    return firstWord;
+                }
+                
+                // If still can't determine, pick a random valid direction
+                const validDirections = this.getValidDirections(mazeGenerator);
+                return validDirections[Math.floor(Math.random() * validDirections.length)];
+            }
+        } catch (error) {
+            console.error('Error getting next move from Anthropic:', error);
+            
+            // Fallback to random valid move
+            const validDirections = this.getValidDirections(mazeGenerator);
+            return validDirections[Math.floor(Math.random() * validDirections.length)];
+        }
+    }
+    
     getValidDirections(mazeGenerator) {
         const { x, y } = this.gameState.playerPosition;
         const validDirections = [];

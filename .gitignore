@@ -1,5 +1,9 @@
 # API Keys
 openai_api_key.txt
+anthropic_api_key.txt
+
+# API Documentation
+Anthropic.README.md.html
 
 # OpenAPI Specification
 openapi.yaml
