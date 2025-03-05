@@ -81,6 +81,7 @@ export class AIPlayer {
                 
                 this.client = new Anthropic({
                     apiKey: anthropicApiKey,
+                    dangerouslyAllowBrowser: true // Only for demo purposes, same as OpenAI client
                 });
                 
                 console.log("Anthropic client created successfully:", !!this.client);
