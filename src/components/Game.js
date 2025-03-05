@@ -148,6 +148,88 @@ export class Game {
         if (stepCounter) {
             stepCounter.textContent = this.gameState.stepCount;
         }
+        
+        // Update AI reasoning display if in AI mode
+        if (this.playerMode !== 'human' && this.aiPlayer) {
+            this.updateAIReasoningDisplay();
+        }
+    }
+    
+    updateAIReasoningDisplay() {
+        // Update the game state section
+        const gameStateEl = document.getElementById('ai-game-state');
+        if (gameStateEl) {
+            const playerPos = this.gameState.playerPosition;
+            const exitPos = this.mazeGenerator.exit;
+            const distance = Math.abs(playerPos.x - exitPos.x) + Math.abs(playerPos.y - exitPos.y);
+            
+            gameStateEl.innerHTML = `
+                <p>Current position: (${playerPos.x}, ${playerPos.y})</p>
+                <p>Exit position: (${exitPos.x}, ${exitPos.y})</p>
+                <p>Manhattan distance to exit: ${distance}</p>
+                <p>Steps taken: ${this.gameState.stepCount}</p>
+            `;
+        }
+        
+        // Simulate AI thoughts based on current position
+        const thoughtsEl = document.getElementById('ai-thoughts');
+        if (thoughtsEl) {
+            const thoughts = this.simulateAIThoughts();
+            thoughtsEl.innerHTML = thoughts;
+        }
+        
+        // Update decision display
+        const decisionEl = document.getElementById('ai-decision');
+        if (decisionEl) {
+            decisionEl.innerHTML = `<p>Moving ${this.lastAIMove || 'calculating...'}</p>`;
+        }
+    }
+    
+    simulateAIThoughts() {
+        // A simple simulation of what an AI might think when solving the maze
+        const playerPos = this.gameState.playerPosition;
+        const exitPos = this.mazeGenerator.exit;
+        const walls = [];
+        
+        // Check available moves
+        if (this.mazeGenerator.hasWall(playerPos.x, playerPos.y, CELL.N)) walls.push('north');
+        if (this.mazeGenerator.hasWall(playerPos.x, playerPos.y, CELL.E)) walls.push('east');
+        if (this.mazeGenerator.hasWall(playerPos.x, playerPos.y, CELL.S)) walls.push('south');
+        if (this.mazeGenerator.hasWall(playerPos.x, playerPos.y, CELL.W)) walls.push('west');
+        
+        // Generate thoughts based on current situation
+        let thoughts = '';
+        if (walls.length >= 3) {
+            thoughts += `<p>I'm in a narrow passage with walls to the ${walls.join(', ')}.</p>`;
+        } else if (walls.length <= 1) {
+            thoughts += `<p>This appears to be a junction with multiple possible paths.</p>`;
+        }
+        
+        // Direction to exit
+        if (playerPos.x < exitPos.x) {
+            thoughts += `<p>The exit is somewhere to the east.</p>`;
+        } else if (playerPos.x > exitPos.x) {
+            thoughts += `<p>The exit is somewhere to the west.</p>`;
+        }
+        
+        if (playerPos.y < exitPos.y) {
+            thoughts += `<p>The exit is somewhere to the south.</p>`;
+        } else if (playerPos.y > exitPos.y) {
+            thoughts += `<p>The exit is somewhere to the north.</p>`;
+        }
+        
+        // Add some randomized thinking for variety
+        const randomThoughts = [
+            "<p>I should explore unexplored paths first.</p>",
+            "<p>I'll try to avoid backtracking unless necessary.</p>",
+            "<p>I might be in a loop, should check my path history.</p>",
+            "<p>I'll prioritize directions that seem to lead toward the exit.</p>",
+            "<p>I should remember this junction for later.</p>"
+        ];
+        
+        thoughts += randomThoughts[Math.floor(Math.random() * randomThoughts.length)];
+        
+        return thoughts;
     }
 
     gameWon() {
@@ -172,6 +254,15 @@ export class Game {
             const direction = await this.aiPlayer.getNextMove(this.mazeGenerator);
             
             if (direction) {
+                // Store the last AI move for the reasoning display
+                this.lastAIMove = direction;
+                
+                // Update the decision display before making the move
+                const decisionEl = document.getElementById('ai-decision');
+                if (decisionEl) {
+                    decisionEl.innerHTML = `<p>Moving ${direction}</p>`;
+                }
+                
                 this.movePlayer(direction);
                 
                 // Schedule next move if game isn't over

@@ -40,9 +40,9 @@ export const COLORS = {
 
 // Game settings
 export const SETTINGS = {
-    CELL_SIZE: 30,
+    CELL_SIZE: 60,        // Increased cell size by 2x
     WALL_THICKNESS: 2,
-    PLAYER_SIZE: 10,
+    PLAYER_SIZE: 16,      // Adjusted player size for larger cells
     ANIMATION_SPEED: 200, // ms
     AI_MOVE_DELAY: 500    // ms
 };

@@ -7,16 +7,50 @@
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-    <div class="game-container">
-        <div class="header">
-            <h1>Shadowlands</h1>
-            <div class="stats">Steps: <span id="step-counter">0</span></div>
+    <div class="main-layout">
+        <div class="left-panel">
+            <div class="header-left">
+                <h1>Shadowlands</h1>
+                <div class="game-description">
+                    <p>Navigate through the maze from the lavender start to the golden exit.</p>
+                    <p>Only visible paths can be traversed. Use arrow keys or WASD to move.</p>
+                    <p>Choose human mode or watch an AI solve the puzzle.</p>
+                </div>
+            </div>
+            <div class="maze-section">
+                <div class="maze-container">
+                    <canvas id="maze-canvas"></canvas>
+                    <div class="step-counter" id="step-counter">0</div>
+                </div>
+                <div class="controls">
+                    <div class="settings-button" id="settings-button">⚙️ Settings</div>
+                </div>
+            </div>
         </div>
-        <div class="maze-container">
-            <canvas id="maze-canvas"></canvas>
-        </div>
-        <div class="controls">
-            <div class="settings-button" id="settings-button">⚙️ Settings</div>
+        <div class="right-panel">
+            <h2>AI Reasoning</h2>
+            <div class="ai-reasoning-container">
+                <div class="reasoning-section">
+                    <h3>Game State</h3>
+                    <div class="game-state" id="ai-game-state">
+                        <p class="placeholder-text">Waiting for AI to analyze the game state...</p>
+                    </div>
+                </div>
+                <hr class="separator">
+                <div class="reasoning-section">
+                    <h3>AI Thoughts</h3>
+                    <div class="ai-thoughts" id="ai-thoughts">
+                        <p class="placeholder-text">Waiting for AI reasoning...</p>
+                    </div>
+                </div>
+                <hr class="separator">
+                <div class="reasoning-section">
+                    <h3>Decision</h3>
+                    <div class="ai-decision" id="ai-decision">
+                        <p class="placeholder-text">Waiting for AI to make a move...</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
