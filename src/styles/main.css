@@ -76,12 +76,18 @@ h1 {
     max-width: 100%;
     overflow: hidden;
     border: 1px solid #EFEFEF;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #maze-canvas {
     display: block;
     background-color: #FAF9F6;
     image-rendering: pixelated;
+    max-width: 100%;
+    height: auto;
+    transition: width 0.3s ease, height 0.3s ease;
 }
 
 .step-counter {

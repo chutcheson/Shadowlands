@@ -5,11 +5,32 @@ export class MazeRenderer {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.mazeGenerator = mazeGenerator;
-        this.cellSize = SETTINGS.CELL_SIZE;
+        
+        // Calculate appropriate cell size based on maze dimensions
+        this.calculateCellSize();
+        
         this.wallThickness = SETTINGS.WALL_THICKNESS;
-        this.playerSize = SETTINGS.PLAYER_SIZE;
+        
+        // Scale player size proportionally to cell size
+        this.playerSize = Math.floor(this.cellSize * SETTINGS.PLAYER_SIZE_RATIO);
         
         this.resizeCanvas();
+    }
+    
+    calculateCellSize() {
+        // Calculate cell size based on maze dimensions to keep it within reasonable bounds
+        const maxWidth = SETTINGS.MAX_MAZE_WIDTH;
+        const baseCellSize = SETTINGS.BASE_CELL_SIZE;
+        
+        // Calculate what the maze width would be with the base cell size
+        const potentialWidth = this.mazeGenerator.width * baseCellSize;
+        
+        if (potentialWidth > maxWidth) {
+            // Scale down the cell size to fit within max width
+            this.cellSize = Math.floor(maxWidth / this.mazeGenerator.width);
+        } else {
+            this.cellSize = baseCellSize;
+        }
     }
 
     resizeCanvas() {
@@ -22,6 +43,13 @@ export class MazeRenderer {
         
         // Set pixel art rendering mode
         this.ctx.imageSmoothingEnabled = false;
+        
+        // Update container size if needed
+        const container = this.canvas.parentElement;
+        if (container) {
+            container.style.width = `${width}px`;
+            container.style.height = `${height}px`;
+        }
     }
 
     clearCanvas() {

@@ -40,9 +40,10 @@ export const COLORS = {
 
 // Game settings
 export const SETTINGS = {
-    CELL_SIZE: 60,        // Increased cell size by 2x
+    BASE_CELL_SIZE: 60,   // Base cell size for calculation
+    MAX_MAZE_WIDTH: 700,  // Maximum width for the maze in pixels
     WALL_THICKNESS: 2,
-    PLAYER_SIZE: 16,      // Adjusted player size for larger cells
+    PLAYER_SIZE_RATIO: 0.27, // Player size as a ratio of cell size
     ANIMATION_SPEED: 200, // ms
     AI_MOVE_DELAY: 500    // ms
 };

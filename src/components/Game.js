@@ -77,7 +77,7 @@ export class Game {
         // Set player's starting position
         this.gameState.playerPosition = { ...start };
         
-        // Create renderer
+        // Create renderer with auto-scaling based on maze size
         this.renderer = new MazeRenderer(this.canvas, this.mazeGenerator);
         
         // Initialize AI player if in AI mode
@@ -94,6 +94,11 @@ export class Game {
         
         // Render the initial state
         this.renderer.render(this.gameState.playerPosition);
+        
+        // Also update AI reasoning display to show initial state
+        if (this.playerMode !== 'human' && this.aiPlayer) {
+            this.updateAIReasoningDisplay();
+        }
     }
 
     movePlayer(direction) {
