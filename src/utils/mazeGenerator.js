@@ -316,5 +316,14 @@ export class MazeGenerator {
                 this.markVisible(nx, ny);
             }
         }
+        
+        // Always make the exit and surrounding areas visible
+        this.markVisible(this.exit.x, this.exit.y);
+        
+        // Mark cells around exit as visible
+        for (let i = 0; i < DIRECTIONS.length; i++) {
+            const { dx, dy } = DIRECTIONS[i];
+            this.markVisible(this.exit.x + dx, this.exit.y + dy);
+        }
     }
 }

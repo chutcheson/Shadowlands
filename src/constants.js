@@ -30,7 +30,7 @@ export const DIRECTION_DELTA = {
 // Game colors
 export const COLORS = {
     BACKGROUND: '#111111',
-    WALL: '#000000',
+    WALL: '#ffffff',
     FLOOR: '#f5f5f5',
     PLAYER: '#000000',
     EXIT: '#ffd700',
