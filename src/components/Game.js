@@ -129,13 +129,8 @@ export class Game {
             // Update step counter display
             this.updateStepCounter();
             
-            // Check if player has reached the exit or the exit area
-            if (
-                // Check if at exact exit position
-                (newX === this.mazeGenerator.exit.x && newY === this.mazeGenerator.exit.y) ||
-                // Check if at one square outside the maze exit
-                (Math.abs(newX - this.mazeGenerator.exit.x) <= 1 && Math.abs(newY - this.mazeGenerator.exit.y) <= 1)
-            ) {
+            // Check if player has reached the exact exit position (fixed the bug)
+            if (newX === this.mazeGenerator.exit.x && newY === this.mazeGenerator.exit.y) {
                 this.gameWon();
             }
             

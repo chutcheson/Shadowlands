@@ -78,52 +78,15 @@ export class MazeRenderer {
                 );
             }
             
-            // Draw walls if needed based on neighboring cells
-            const walls = this.mazeGenerator.getWalls(x, y);
-            this.ctx.fillStyle = COLORS.WALL;
-            
-            // Only draw walls where there's a passage to a visible cell
-            // This creates the effect of only seeing walls at the edges of visibility
-            
-            // North wall
-            if (walls & CELL.N) {
-                this.ctx.fillRect(
-                    cellX, 
-                    cellY, 
-                    this.cellSize, 
-                    this.wallThickness
-                );
-            }
-            
-            // East wall
-            if (walls & CELL.E) {
-                this.ctx.fillRect(
-                    cellX + this.cellSize - this.wallThickness, 
-                    cellY, 
-                    this.wallThickness, 
-                    this.cellSize
-                );
-            }
-            
-            // South wall
-            if (walls & CELL.S) {
-                this.ctx.fillRect(
-                    cellX, 
-                    cellY + this.cellSize - this.wallThickness, 
-                    this.cellSize, 
-                    this.wallThickness
-                );
-            }
-            
-            // West wall
-            if (walls & CELL.W) {
-                this.ctx.fillRect(
-                    cellX, 
-                    cellY, 
-                    this.wallThickness, 
-                    this.cellSize
-                );
-            }
+            // Instead of drawing walls, we'll just add a subtle grid line for a cleaner look
+            this.ctx.strokeStyle = 'rgba(230, 230, 230, 0.6)';
+            this.ctx.lineWidth = 1;
+            this.ctx.strokeRect(
+                cellX,
+                cellY,
+                this.cellSize,
+                this.cellSize
+            );
         } else {
             // Draw fog for non-visible cells
             this.ctx.fillStyle = COLORS.FOG;
