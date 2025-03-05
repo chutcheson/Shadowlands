@@ -33,25 +33,62 @@ export class MazeRenderer {
         const cellX = x * this.cellSize;
         const cellY = y * this.cellSize;
         
-        // Draw cell background
+        // Draw cell background with cel-shaded effect
         if (isVisible) {
+            // Base color
+            let baseColor;
             if (isExit) {
-                this.ctx.fillStyle = COLORS.EXIT;
+                baseColor = COLORS.EXIT;
             } else if (isStart) {
-                this.ctx.fillStyle = COLORS.START;
+                baseColor = COLORS.START;
             } else {
-                this.ctx.fillStyle = COLORS.FLOOR;
+                baseColor = COLORS.FLOOR;
+            }
+            
+            // Apply cel-shading effect
+            this.ctx.fillStyle = baseColor;
+            this.ctx.fillRect(
+                cellX + this.wallThickness / 2, 
+                cellY + this.wallThickness / 2, 
+                this.cellSize - this.wallThickness, 
+                this.cellSize - this.wallThickness
+            );
+            
+            // Add darker edge to create cel-shaded look
+            this.ctx.fillStyle = this.getDarkerColor(baseColor);
+            this.ctx.fillRect(
+                cellX + this.wallThickness / 2 + (this.cellSize - this.wallThickness) * 0.8, 
+                cellY + this.wallThickness / 2, 
+                (this.cellSize - this.wallThickness) * 0.2, 
+                this.cellSize - this.wallThickness
+            );
+            this.ctx.fillRect(
+                cellX + this.wallThickness / 2, 
+                cellY + this.wallThickness / 2 + (this.cellSize - this.wallThickness) * 0.8, 
+                this.cellSize - this.wallThickness, 
+                (this.cellSize - this.wallThickness) * 0.2
+            );
+            
+            // Add highlight for more dramatic cel-shading
+            if (isExit) {
+                // Add glow effect for exit
+                this.ctx.fillStyle = this.getLighterColor(baseColor);
+                this.ctx.fillRect(
+                    cellX + this.wallThickness / 2, 
+                    cellY + this.wallThickness / 2, 
+                    (this.cellSize - this.wallThickness) * 0.3, 
+                    (this.cellSize - this.wallThickness) * 0.3
+                );
             }
         } else {
             this.ctx.fillStyle = COLORS.FOG;
+            this.ctx.fillRect(
+                cellX + this.wallThickness / 2, 
+                cellY + this.wallThickness / 2, 
+                this.cellSize - this.wallThickness, 
+                this.cellSize - this.wallThickness
+            );
         }
-        
-        this.ctx.fillRect(
-            cellX + this.wallThickness / 2, 
-            cellY + this.wallThickness / 2, 
-            this.cellSize - this.wallThickness, 
-            this.cellSize - this.wallThickness
-        );
         
         // Only draw walls if cell is visible
         if (isVisible) {
@@ -101,18 +138,77 @@ export class MazeRenderer {
             }
         }
     }
+    
+    // Helper function to get a darker version of a color for cell shading
+    getDarkerColor(hexColor) {
+        // Convert hex to RGB
+        let r = parseInt(hexColor.slice(1, 3), 16);
+        let g = parseInt(hexColor.slice(3, 5), 16);
+        let b = parseInt(hexColor.slice(5, 7), 16);
+        
+        // Make darker
+        r = Math.max(0, r - 40);
+        g = Math.max(0, g - 40);
+        b = Math.max(0, b - 40);
+        
+        // Convert back to hex
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    }
+    
+    // Helper function to get a lighter version of a color for cell shading
+    getLighterColor(hexColor) {
+        // Convert hex to RGB
+        let r = parseInt(hexColor.slice(1, 3), 16);
+        let g = parseInt(hexColor.slice(3, 5), 16);
+        let b = parseInt(hexColor.slice(5, 7), 16);
+        
+        // Make lighter
+        r = Math.min(255, r + 40);
+        g = Math.min(255, g + 40);
+        b = Math.min(255, b + 40);
+        
+        // Convert back to hex
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    }
 
     drawPlayer(x, y) {
         const centerX = (x + 0.5) * this.cellSize;
         const centerY = (y + 0.5) * this.cellSize;
         
-        // Draw player
+        // Draw player with cel-shaded effect
+        const baseSize = this.playerSize / 2;
+        
+        // Main body
         this.ctx.fillStyle = COLORS.PLAYER;
         this.ctx.beginPath();
         this.ctx.arc(
             centerX, 
             centerY, 
-            this.playerSize / 2, 
+            baseSize, 
+            0, 
+            Math.PI * 2
+        );
+        this.ctx.fill();
+        
+        // Highlight (cel-shading)
+        this.ctx.fillStyle = '#333333';
+        this.ctx.beginPath();
+        this.ctx.arc(
+            centerX + baseSize * 0.3, 
+            centerY + baseSize * 0.3, 
+            baseSize * 0.6, 
+            0, 
+            Math.PI * 2
+        );
+        this.ctx.fill();
+        
+        // Light reflection
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.beginPath();
+        this.ctx.arc(
+            centerX - baseSize * 0.3, 
+            centerY - baseSize * 0.3, 
+            baseSize * 0.3, 
             0, 
             Math.PI * 2
         );

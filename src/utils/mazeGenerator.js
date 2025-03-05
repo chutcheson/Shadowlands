@@ -198,7 +198,7 @@ export class MazeGenerator {
         return { grid: this.grid, start: this.start, exit: this.exit };
     }
 
-    // Find the exit point (farthest from start)
+    // Find the exit point (farthest from start and at the edge of the maze)
     findExit() {
         // Use breadth-first search to find the cell farthest from the start
         const queue = [{ ...this.start, distance: 0 }];
@@ -210,8 +210,11 @@ export class MazeGenerator {
         while (queue.length > 0) {
             const current = queue.shift();
             
-            // If this is the farthest cell so far, update farthest
-            if (current.distance > farthest.distance) {
+            // If this is the farthest cell so far AND it's at the edge of the maze, update farthest
+            const isEdgeCell = current.x === 0 || current.x === this.width - 1 || 
+                             current.y === 0 || current.y === this.height - 1;
+            
+            if (current.distance > farthest.distance && isEdgeCell) {
                 farthest = current;
             }
             
@@ -245,6 +248,23 @@ export class MazeGenerator {
                             distance: current.distance + 1 
                         });
                     }
+                }
+            }
+        }
+        
+        // If we couldn't find an edge cell, find any edge cell
+        if (farthest.x === this.start.x && farthest.y === this.start.y) {
+            // Find the farthest cell including non-edge cells
+            for (const key of visited) {
+                const [x, y] = key.split(',').map(Number);
+                const cell = { x, y };
+                const distance = Math.abs(cell.x - this.start.x) + Math.abs(cell.y - this.start.y);
+                
+                const isEdgeCell = cell.x === 0 || cell.x === this.width - 1 || 
+                                 cell.y === 0 || cell.y === this.height - 1;
+                
+                if (isEdgeCell && distance > farthest.distance) {
+                    farthest = { ...cell, distance };
                 }
             }
         }
