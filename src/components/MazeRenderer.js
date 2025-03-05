@@ -45,28 +45,28 @@ export class MazeRenderer {
                 baseColor = COLORS.FLOOR;
             }
             
-            // Apply cel-shading effect
+            // Draw full cell without walls/borders
             this.ctx.fillStyle = baseColor;
             this.ctx.fillRect(
-                cellX + this.wallThickness / 2, 
-                cellY + this.wallThickness / 2, 
-                this.cellSize - this.wallThickness, 
-                this.cellSize - this.wallThickness
+                cellX, 
+                cellY, 
+                this.cellSize, 
+                this.cellSize
             );
             
-            // Add darker edge to create cel-shaded look
+            // Add darker edge to create cel-shaded look (but not on the outer edges)
             this.ctx.fillStyle = this.getDarkerColor(baseColor);
             this.ctx.fillRect(
-                cellX + this.wallThickness / 2 + (this.cellSize - this.wallThickness) * 0.8, 
-                cellY + this.wallThickness / 2, 
-                (this.cellSize - this.wallThickness) * 0.2, 
-                this.cellSize - this.wallThickness
+                cellX + this.cellSize * 0.8, 
+                cellY, 
+                this.cellSize * 0.2, 
+                this.cellSize
             );
             this.ctx.fillRect(
-                cellX + this.wallThickness / 2, 
-                cellY + this.wallThickness / 2 + (this.cellSize - this.wallThickness) * 0.8, 
-                this.cellSize - this.wallThickness, 
-                (this.cellSize - this.wallThickness) * 0.2
+                cellX, 
+                cellY + this.cellSize * 0.8, 
+                this.cellSize, 
+                this.cellSize * 0.2
             );
             
             // Add highlight for more dramatic cel-shading
@@ -74,68 +74,20 @@ export class MazeRenderer {
                 // Add glow effect for exit
                 this.ctx.fillStyle = this.getLighterColor(baseColor);
                 this.ctx.fillRect(
-                    cellX + this.wallThickness / 2, 
-                    cellY + this.wallThickness / 2, 
-                    (this.cellSize - this.wallThickness) * 0.3, 
-                    (this.cellSize - this.wallThickness) * 0.3
+                    cellX, 
+                    cellY, 
+                    this.cellSize * 0.3, 
+                    this.cellSize * 0.3
                 );
             }
         } else {
             this.ctx.fillStyle = COLORS.FOG;
             this.ctx.fillRect(
-                cellX + this.wallThickness / 2, 
-                cellY + this.wallThickness / 2, 
-                this.cellSize - this.wallThickness, 
-                this.cellSize - this.wallThickness
+                cellX, 
+                cellY, 
+                this.cellSize, 
+                this.cellSize
             );
-        }
-        
-        // Only draw walls if cell is visible
-        if (isVisible) {
-            this.ctx.fillStyle = COLORS.WALL;
-            
-            // Draw walls based on cell's wall configuration
-            const walls = this.mazeGenerator.getWalls(x, y);
-            
-            // North wall
-            if (walls & CELL.N) {
-                this.ctx.fillRect(
-                    cellX, 
-                    cellY, 
-                    this.cellSize, 
-                    this.wallThickness
-                );
-            }
-            
-            // East wall
-            if (walls & CELL.E) {
-                this.ctx.fillRect(
-                    cellX + this.cellSize - this.wallThickness, 
-                    cellY, 
-                    this.wallThickness, 
-                    this.cellSize
-                );
-            }
-            
-            // South wall
-            if (walls & CELL.S) {
-                this.ctx.fillRect(
-                    cellX, 
-                    cellY + this.cellSize - this.wallThickness, 
-                    this.cellSize, 
-                    this.wallThickness
-                );
-            }
-            
-            // West wall
-            if (walls & CELL.W) {
-                this.ctx.fillRect(
-                    cellX, 
-                    cellY, 
-                    this.wallThickness, 
-                    this.cellSize
-                );
-            }
         }
     }
     
@@ -253,14 +205,12 @@ export class MazeRenderer {
                                 isStart ? COLORS.START : 
                                 COLORS.FLOOR;
             
-            const pixelSize = Math.ceil((this.cellSize - this.wallThickness) / revealFrames);
-            const pixelsPerFrame = Math.ceil((this.cellSize - this.wallThickness) / pixelSize / revealFrames);
+            const pixelSize = Math.ceil(this.cellSize / revealFrames);
+            const pixelsPerFrame = Math.ceil(this.cellSize / pixelSize / revealFrames);
             
             for (let i = 0; i < pixelsPerFrame; i++) {
-                const pixelX = cellX + this.wallThickness / 2 + 
-                    Math.floor(Math.random() * (this.cellSize - this.wallThickness));
-                const pixelY = cellY + this.wallThickness / 2 + 
-                    Math.floor(Math.random() * (this.cellSize - this.wallThickness));
+                const pixelX = cellX + Math.floor(Math.random() * this.cellSize);
+                const pixelY = cellY + Math.floor(Math.random() * this.cellSize);
                 
                 this.ctx.fillRect(pixelX, pixelY, pixelSize, pixelSize);
             }
