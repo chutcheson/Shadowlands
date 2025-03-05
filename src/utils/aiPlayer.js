@@ -178,6 +178,38 @@ Decide your next move. Return only: "north", "east", "south", or "west"`
         };
 
         try {
+            // Log example of request to show what's sent to the LLM
+            const exampleRequest = {
+                model: this.model,
+                messages: [systemMessage, ...historyMessages, currentStateMessage],
+                temperature: 0.2,
+                max_tokens: 50,
+                top_p: 1.0,
+                presence_penalty: 0.1,
+                frequency_penalty: 0.5
+            };
+            
+            // Log an example to the console for debugging
+            console.log("Example LLM Request:", JSON.stringify(exampleRequest, null, 2));
+            
+            // Show example in the UI if possible
+            const exampleEl = document.getElementById('ai-game-state');
+            if (exampleEl) {
+                // Display a more readable version of visible cells for the current state
+                const visibleCellsDescription = currentState.visibleCells.map(cell => {
+                    return `Cell at (${cell.position.x}, ${cell.position.y}):
+    Walls: ${Object.entries(cell.walls).filter(([k,v]) => v).map(([k]) => k).join(', ')}
+    ${cell.isStart ? '(START)' : ''}${cell.isExit ? '(EXIT)' : ''}`;
+                }).join('\n');
+                
+                exampleEl.innerHTML = `
+                <p><strong>Current position:</strong> (${this.gameState.playerPosition.x}, ${this.gameState.playerPosition.y})</p>
+                <p><strong>Visible cells:</strong></p>
+                <pre style="font-size: 0.8rem; background: #f6f6f6; padding: 5px; border-radius: 4px; max-height: 100px; overflow-y: auto;">${visibleCellsDescription}</pre>
+                <p><strong>History:</strong> ${this.history.length} previous positions</p>
+                `;
+            }
+            
             // Make the API call with full history and enhanced parameters
             const response = await this.client.chat.completions.create({
                 model: this.model,
@@ -191,6 +223,19 @@ Decide your next move. Return only: "north", "east", "south", or "west"`
 
             // Extract and process the response
             const moveResponse = response.choices[0].message.content.trim().toLowerCase();
+            
+            // Display the AI's response in the decision section
+            const decisionEl = document.getElementById('ai-decision');
+            if (decisionEl) {
+                decisionEl.innerHTML = `
+                <p><strong>AI response:</strong></p>
+                <pre style="font-size: 0.9rem; background: #f6f6f6; padding: 5px; border-radius: 4px;">${moveResponse}</pre>
+                <p><strong>Direction chosen:</strong> ${moveResponse.includes('north') ? 'north' : 
+                                            moveResponse.includes('east') ? 'east' : 
+                                            moveResponse.includes('south') ? 'south' : 
+                                            moveResponse.includes('west') ? 'west' : 'unknown'}</p>
+                `;
+            }
             
             // Parse the response to get a valid direction
             if (moveResponse.includes('north')) {

@@ -163,16 +163,18 @@ export class Game {
     updateAIReasoningDisplay() {
         // Update the game state section
         const gameStateEl = document.getElementById('ai-game-state');
-        if (gameStateEl) {
+        if (gameStateEl && !this.aiPlayer) {
+            // Only show this if we don't have an AI player yet
+            // (The AI player class will handle showing its own representation)
             const playerPos = this.gameState.playerPosition;
             const exitPos = this.mazeGenerator.exit;
             const distance = Math.abs(playerPos.x - exitPos.x) + Math.abs(playerPos.y - exitPos.y);
             
             gameStateEl.innerHTML = `
-                <p>Current position: (${playerPos.x}, ${playerPos.y})</p>
-                <p>Exit position: (${exitPos.x}, ${exitPos.y})</p>
-                <p>Manhattan distance to exit: ${distance}</p>
-                <p>Steps taken: ${this.gameState.stepCount}</p>
+                <p><strong>Current position:</strong> (${playerPos.x}, ${playerPos.y})</p>
+                <p><strong>Exit position:</strong> (${exitPos.x}, ${exitPos.y})</p>
+                <p><strong>Manhattan distance to exit:</strong> ${distance}</p>
+                <p><strong>Steps taken:</strong> ${this.gameState.stepCount}</p>
             `;
         }
         
