@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Maze Game</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>Vibe Maze</h1>
+            <div class="stats">Steps: <span id="step-counter">0</span></div>
+        </div>
+        <div class="maze-container">
+            <canvas id="maze-canvas"></canvas>
+        </div>
+        <div class="controls">
+            <div class="settings-button" id="settings-button">⚙️ Settings</div>
+        </div>
+    </div>
+
+    <div class="settings-modal" id="settings-modal">
+        <div class="settings-content">
+            <h2>Game Settings</h2>
+            <div class="setting">
+                <label for="maze-size">Maze Size:</label>
+                <select id="maze-size">
+                    <option value="10">Small (10x10)</option>
+                    <option value="15" selected>Medium (15x15)</option>
+                    <option value="20">Large (20x20)</option>
+                    <option value="25">Huge (25x25)</option>
+                </select>
+            </div>
+            <div class="setting">
+                <label for="player-mode">Player Mode:</label>
+                <select id="player-mode">
+                    <option value="human" selected>Human Player</option>
+                    <option value="gpt-4o">GPT-4o</option>
+                    <option value="gpt-4o-mini">GPT-4o-mini</option>
+                </select>
+            </div>
+            <div class="setting">
+                <button id="new-game-button">New Game</button>
+                <button id="close-settings">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="index.js"></script>
+</body>
+</html>

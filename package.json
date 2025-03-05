@@ -1,0 +1,24 @@
+{
+  "name": "vibe-maze-game",
+  "version": "1.0.0",
+  "description": "A maze game with limited visibility and LLM player mode",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "parcel src/index.html",
+    "build": "parcel build src/index.html"
+  },
+  "keywords": [
+    "maze",
+    "game",
+    "openai",
+    "gpt"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "openai": "^4.46.0"
+  },
+  "devDependencies": {
+    "parcel": "^2.10.3"
+  }
+}
