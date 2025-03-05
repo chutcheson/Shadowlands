@@ -139,23 +139,30 @@ export class AIPlayer {
             content: `You are an AI solving a maze. Your goal is to find the exit (marked as isExit: true) from the current position.
             
 You can only see your current cell and adjacent cells that are not blocked by walls. 
-You must make decisions based only on what you can currently see and your memory of where you've been.
+You must make decisions based on what you can currently see and your complete memory of where you've been.
 
 The maze is a grid where each cell can have walls on any of its four sides: north, east, south, and west.
 You can only move in directions where there is no wall.
 
-For each move, you must return only one of: "north", "east", "south", or "west".
-Choose the direction that you believe will lead you closer to the exit, avoiding revisiting the same cells when possible.
+NAVIGATION STRATEGY:
+1. If you can see the exit, move toward it directly.
+2. Maintain a mental map of the maze from the cells you've visited.
+3. Avoid revisiting the same cells when possible.
+4. Use wall-following or other maze-solving algorithms when appropriate.
+5. If you find yourself in a loop, try a different direction.
+
+For each move, you MUST return only one of: "north", "east", "south", or "west".
 
 The maze is ${mazeGenerator.width}x${mazeGenerator.height} in size.
-The exit is somewhere in the maze, marked as isExit: true when visible.`
+The exit is somewhere in the maze, marked as isExit: true when visible.
+You have full access to your entire movement history since starting the maze.`
         };
 
-        // Prepare the recent history as context for the AI
-        const historyMessages = this.history.slice(-10).map((entry, index) => {
+        // Use full history for context (LLMs have large context windows)
+        const historyMessages = this.history.map((entry, index) => {
             return {
                 role: 'user',
-                content: `Move ${this.history.length - 10 + index + 1}:
+                content: `Move ${index + 1}:
 Current position: (${entry.position.x}, ${entry.position.y})
 Visible cells: ${JSON.stringify(entry.visibleCells, null, 2)}`
             };
@@ -171,12 +178,15 @@ Decide your next move. Return only: "north", "east", "south", or "west"`
         };
 
         try {
-            // Make the API call
+            // Make the API call with full history and enhanced parameters
             const response = await this.client.chat.completions.create({
                 model: this.model,
                 messages: [systemMessage, ...historyMessages, currentStateMessage],
                 temperature: 0.2,
-                max_tokens: 50
+                max_tokens: 50,
+                top_p: 1.0,
+                presence_penalty: 0.1, // Slight penalty for repeating itself
+                frequency_penalty: 0.5 // Stronger penalty to discourage visiting the same places
             });
 
             // Extract and process the response

@@ -186,48 +186,94 @@ export class Game {
     }
     
     simulateAIThoughts() {
-        // A simple simulation of what an AI might think when solving the maze
+        // A more comprehensive simulation of what an AI might think when solving the maze
         const playerPos = this.gameState.playerPosition;
         const exitPos = this.mazeGenerator.exit;
         const walls = [];
+        const openDirections = [];
         
         // Check available moves
-        if (this.mazeGenerator.hasWall(playerPos.x, playerPos.y, CELL.N)) walls.push('north');
-        if (this.mazeGenerator.hasWall(playerPos.x, playerPos.y, CELL.E)) walls.push('east');
-        if (this.mazeGenerator.hasWall(playerPos.x, playerPos.y, CELL.S)) walls.push('south');
-        if (this.mazeGenerator.hasWall(playerPos.x, playerPos.y, CELL.W)) walls.push('west');
+        if (this.mazeGenerator.hasWall(playerPos.x, playerPos.y, CELL.N)) {
+            walls.push('north');
+        } else {
+            openDirections.push('north');
+        }
+        
+        if (this.mazeGenerator.hasWall(playerPos.x, playerPos.y, CELL.E)) {
+            walls.push('east');
+        } else {
+            openDirections.push('east');
+        }
+        
+        if (this.mazeGenerator.hasWall(playerPos.x, playerPos.y, CELL.S)) {
+            walls.push('south');
+        } else {
+            openDirections.push('south');
+        }
+        
+        if (this.mazeGenerator.hasWall(playerPos.x, playerPos.y, CELL.W)) {
+            walls.push('west');
+        } else {
+            openDirections.push('west');
+        }
         
         // Generate thoughts based on current situation
         let thoughts = '';
+        
+        // Path topology analysis
         if (walls.length >= 3) {
             thoughts += `<p>I'm in a narrow passage with walls to the ${walls.join(', ')}.</p>`;
+            thoughts += `<p>Only one way to go: ${openDirections[0]}.</p>`;
+        } else if (walls.length === 2) {
+            thoughts += `<p>This is a corridor with open paths to the ${openDirections.join(' and ')}.</p>`;
         } else if (walls.length <= 1) {
-            thoughts += `<p>This appears to be a junction with multiple possible paths.</p>`;
+            thoughts += `<p>This appears to be a junction with multiple possible paths: ${openDirections.join(', ')}.</p>`;
+            thoughts += `<p>I should carefully consider which direction to explore first.</p>`;
         }
         
+        // Compute Manhattan distance to exit
+        const manhattanDistance = Math.abs(playerPos.x - exitPos.x) + Math.abs(playerPos.y - exitPos.y);
+        thoughts += `<p>I estimate I'm about ${manhattanDistance} cells away from the exit (Manhattan distance).</p>`;
+        
         // Direction to exit
+        const directionHints = [];
         if (playerPos.x < exitPos.x) {
-            thoughts += `<p>The exit is somewhere to the east.</p>`;
+            directionHints.push("east");
         } else if (playerPos.x > exitPos.x) {
-            thoughts += `<p>The exit is somewhere to the west.</p>`;
+            directionHints.push("west");
         }
         
         if (playerPos.y < exitPos.y) {
-            thoughts += `<p>The exit is somewhere to the south.</p>`;
+            directionHints.push("south");
         } else if (playerPos.y > exitPos.y) {
-            thoughts += `<p>The exit is somewhere to the north.</p>`;
+            directionHints.push("north");
         }
         
-        // Add some randomized thinking for variety
-        const randomThoughts = [
-            "<p>I should explore unexplored paths first.</p>",
-            "<p>I'll try to avoid backtracking unless necessary.</p>",
-            "<p>I might be in a loop, should check my path history.</p>",
-            "<p>I'll prioritize directions that seem to lead toward the exit.</p>",
-            "<p>I should remember this junction for later.</p>"
-        ];
+        if (directionHints.length > 0) {
+            thoughts += `<p>Based on my mental map, the exit should be somewhere to the ${directionHints.join(' and ')}.</p>`;
+        }
         
-        thoughts += randomThoughts[Math.floor(Math.random() * randomThoughts.length)];
+        // Add maze solving strategy thoughts based on step count
+        if (this.gameState.stepCount > 20) {
+            const strategyThoughts = [
+                "<p>I should be using the wall-following algorithm to ensure I explore the entire maze.</p>",
+                "<p>I need to maintain a comprehensive mental map of where I've been.</p>",
+                "<p>I might be in a loop, should analyze my movement history.</p>",
+                "<p>Perhaps I should try a different maze-solving algorithm now.</p>",
+                "<p>If I keep hitting dead ends, I should systematically mark them in my mental map.</p>"
+            ];
+            thoughts += strategyThoughts[Math.floor(Math.random() * strategyThoughts.length)];
+        } else {
+            // Beginner thoughts for early in the maze
+            const earlyThoughts = [
+                "<p>I'll prioritize unexplored paths to avoid revisiting cells.</p>",
+                "<p>I should remember junctions for backtracking if needed.</p>",
+                "<p>I'll try to move generally in the direction of the exit when possible.</p>",
+                "<p>I need to start building a mental map of the maze structure.</p>",
+                "<p>Let me explore systematically to understand the maze layout.</p>"
+            ];
+            thoughts += earlyThoughts[Math.floor(Math.random() * earlyThoughts.length)];
+        }
         
         return thoughts;
     }
@@ -265,9 +311,21 @@ export class Game {
                 
                 this.movePlayer(direction);
                 
-                // Schedule next move if game isn't over
+                // Schedule next move if game isn't over, with a 
+                // dynamically increasing delay for larger mazes to allow
+                // the model more thinking time as the game progresses
                 if (!this.gameState.gameOver) {
-                    this.scheduleAIMove();
+                    // Increase delay for larger mazes or as steps increase
+                    const baseDelay = SETTINGS.AI_MOVE_DELAY;
+                    const stepFactor = Math.min(1.5, 1 + (this.gameState.stepCount / 100)); // Gradually increase delay
+                    const mazeComplexityFactor = Math.min(1.5, this.mazeSize / 10); // Larger mazes get more delay
+                    
+                    // Apply the delay scaling factors
+                    const adjustedDelay = baseDelay * stepFactor * mazeComplexityFactor;
+                    
+                    setTimeout(() => {
+                        this.scheduleAIMove();
+                    }, adjustedDelay);
                 }
             }
         }, SETTINGS.AI_MOVE_DELAY);
