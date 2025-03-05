@@ -397,7 +397,7 @@ Decide your next move. Return only: "north", "east", "south", or "west"`;
             console.log("Making Anthropic API call with client:", this.client);
             
             // Set up specific model ID for Claude 3.7 Sonnet
-            const modelToUse = "claude-3-sonnet-20240229";
+            const modelToUse = "claude-3-7-sonnet-20240305";
             console.log("Using Anthropic model:", modelToUse);
             
             // Log API call attempt
