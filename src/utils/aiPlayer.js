@@ -66,6 +66,8 @@ export class AIPlayer {
             // Initialize Anthropic client
             if (!anthropicApiKey) {
                 anthropicApiKey = await loadAnthropicKey();
+                console.log("Loaded Anthropic API key (first few chars):", 
+                    anthropicApiKey ? anthropicApiKey.substring(0, 8) + "..." : "null");
             }
             
             if (!anthropicApiKey) {
@@ -74,9 +76,14 @@ export class AIPlayer {
             }
 
             try {
+                console.log("Creating Anthropic client with key (first few chars):", 
+                    anthropicApiKey.substring(0, 8) + "...");
+                
                 this.client = new Anthropic({
                     apiKey: anthropicApiKey,
                 });
+                
+                console.log("Anthropic client created successfully:", !!this.client);
                 this.isReady = true;
                 return true;
             } catch (error) {
@@ -387,16 +394,38 @@ Decide your next move. Return only: "north", "east", "south", or "west"`;
                 `;
             }
             
-            // Make the API call to Anthropic Claude
-            const response = await this.client.messages.create({
-                model: "claude-3-sonnet-20240229", // Use the closest stable Claude model
-                system: systemPrompt,
-                messages: [
-                    { role: "user", content: historyText + "\n\n" + currentPrompt }
-                ],
-                max_tokens: 50,
-                temperature: 0.2
+            console.log("Making Anthropic API call with client:", this.client);
+            
+            // Set up specific model ID for Claude 3.7 Sonnet
+            const modelToUse = "claude-3-sonnet-20240229";
+            console.log("Using Anthropic model:", modelToUse);
+            
+            // Log API call attempt
+            console.log("Attempting Anthropic API call with params:", {
+                model: modelToUse,
+                system: systemPrompt.substring(0, 50) + "...",
+                messageCount: 1,
+                max_tokens: 50
             });
+            
+            let response;
+            try {
+                // Make the API call to Anthropic Claude
+                response = await this.client.messages.create({
+                    model: modelToUse,
+                    system: systemPrompt,
+                    messages: [
+                        { role: "user", content: historyText + "\n\n" + currentPrompt }
+                    ],
+                    max_tokens: 50,
+                    temperature: 0.2
+                });
+                
+                console.log("Received Anthropic response:", response);
+            } catch (claudeError) {
+                console.error("Detailed Anthropic API error:", claudeError);
+                throw claudeError;
+            }
             
             // Extract and process the response
             const moveResponse = response.content[0].text.trim().toLowerCase();
