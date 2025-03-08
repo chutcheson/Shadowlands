@@ -1,5 +1,7 @@
 # Shadowlands Maze Game
 
+![Shadowlands Game](shadowlands.png)
+
 A maze exploration game with limited visibility and LLM player modes.
 
 ## Game Concept
