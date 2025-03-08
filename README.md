@@ -1,10 +1,10 @@
-# Vibe Maze Game
+# Shadowlands Maze Game
 
 A maze exploration game with limited visibility and LLM player modes.
 
 ## Game Concept
 
-In Vibe Maze, the player navigates through a maze but only sees their immediate surroundings—just the current cell and adjacent accessible cells. This creates a sense of exploration and suspense.
+In Shadowlands, the player navigates through a maze but only sees their immediate surroundings—just the current cell and adjacent accessible cells. This creates a sense of exploration and suspense.
 
 ## Features
 
